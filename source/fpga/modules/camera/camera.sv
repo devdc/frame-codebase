@@ -402,12 +402,6 @@ logic [127:0] image_data;
 logic image_data_valid;
 //logic image_complete;
 
-// Define selection of 4 possible QF
-parameter QF0 = 50;
-parameter QF1 = 100;
-parameter QF2 = 10;
-parameter QF3 = 25;
-
 jpeg_encoder jpeg_encoder (
     .pixel_clock_in(pixel_clock_in),
     .pixel_reset_n_in(pixel_reset_n_in),
