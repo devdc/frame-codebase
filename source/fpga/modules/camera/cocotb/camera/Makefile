@@ -76,9 +76,9 @@ VERILOG_FILES += \
         ../../jpeg_encoder/jenc/quant_tables.sv \
         ../../jpeg_encoder/jenc/entropy.sv \
         ../../jpeg_encoder/jenc/huff_tables.sv \
-        ../../jpeg_encoder/jenc/bitpacker.sv \
-        ../../jpeg_encoder/jenc/bytepacker.sv \
-        ../../jpeg_encoder/jenc/pre_cdc.sv \
+        ../../jpeg_encoder/jenc/bit_pack.sv \
+        ../../jpeg_encoder/jenc/byte_pack.sv \
+        ../../jpeg_encoder/jenc/ff00.sv \
         ../../jpeg_encoder/jlib/afifo.v
 
 #        ../../jpeg_encoder/jenc/quant_seq_mult_15x13_p4.sv
