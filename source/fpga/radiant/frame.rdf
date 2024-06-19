@@ -75,12 +75,6 @@
         <Source name="../modules/camera/jpeg_encoder/jisp/subsample.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/jpeg_encoder/jenc/bitpacker.sv" type="Verilog" type_short="Verilog">
-            <Options VerilogStandard="System Verilog"/>
-        </Source>
-        <Source name="../modules/camera/jpeg_encoder/jenc/bytepacker.sv" type="Verilog" type_short="Verilog">
-            <Options VerilogStandard="System Verilog"/>
-        </Source>
         <Source name="../modules/camera/jpeg_encoder/jenc/dct_1d_aan.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
@@ -117,9 +111,6 @@
         <Source name="../modules/camera/jpeg_encoder/jpeg_encoder.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/jpeg_encoder/jenc/pre_cdc.sv" type="Verilog" type_short="Verilog">
-            <Options VerilogStandard="System Verilog"/>
-        </Source>
         <Source name="../modules/reset/global_reset_sync.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
@@ -142,6 +133,15 @@
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="../modules/camera/jpeg_encoder/jlib/dp_ram.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="../modules/camera/jpeg_encoder/jenc/byte_pack.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="../modules/camera/jpeg_encoder/jenc/bit_pack.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="../modules/camera/jpeg_encoder/jenc/ff00.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="source/frame/frame.ldc" type="LSE Design Constraints File" type_short="LDC">
