@@ -124,6 +124,7 @@ class Tester(SPITransactor):
             self.img_bgr[:9, :, 2] = 255 # red top
             self.img_bgr[:, :9, 1] = 255 # green left
             #self.img_bgr[:, :, :] = np.random.randint(0, 256, self.img_bgr.shape)
+            #self.img_bgr[:, :, :] = 128
 
         # make bayer
         self.img_bayer = np.empty((self.y, self.x), dtype=np.uint8)        
