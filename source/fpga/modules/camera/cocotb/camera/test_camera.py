@@ -124,6 +124,7 @@ class Tester(SPITransactor):
             self.img_bgr[:9, :, 2] = 255 # red top
             self.img_bgr[:, :9, 1] = 255 # green left
             #self.img_bgr[:, :, :] = np.random.randint(0, 256, self.img_bgr.shape)
+            #self.img_bgr[:, 175:, :] = 128
             #self.img_bgr[:, :, :] = 128
 
         # make bayer
@@ -139,8 +140,8 @@ class Tester(SPITransactor):
 
         #self.y = int(os.environ.get('SENSOR_Y_SIZE', 768))
         #self.x = int(os.environ.get('SENSOR_X_SIZE', 1288))
-        self.y = int(os.environ.get('SENSOR_Y_SIZE', 208))
-        self.x = int(os.environ.get('SENSOR_X_SIZE', 208))
+        self.y = int(os.environ.get('SENSOR_Y_SIZE', 204))
+        self.x = int(os.environ.get('SENSOR_X_SIZE', 204))
         self.img_bayer = self.img_bayer[:self.y, :self.x]
         self.y = int(os.environ.get('IMAGE_Y_SIZE', 200))
         self.x = int(os.environ.get('IMAGE_X_SIZE', 200))
