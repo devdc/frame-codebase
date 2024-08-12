@@ -64,4 +64,11 @@ $> make SIM=verilator
 
 
 
+Debug:
+make clean; make SIM=verilator IMG16X16=1 QF=10 WAVES=1 LOG_LEVEL=DEBUG
+make clean; make SIM=icarus    IMG16X16=1 QF=10 WAVES=1 LOG_LEVEL=DEBUG
+make clean; make SIM=modelsim  IMG16X16=1 QF=10 WAVES=1 LOG_LEVEL=DEBUG
+make clean; make SIM=modelsim  IMG16X16=1 QF=10 WAVES=1 LOG_LEVEL=DEBUG GATE_SIM=1
 
+w/ adjustable QF: 
+make clean; make SIM=verilator IMG16X16=1 QF=1 QF2=1 WAVES=1 LOG_LEVEL=DEBUG
