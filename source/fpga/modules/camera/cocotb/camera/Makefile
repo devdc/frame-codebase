@@ -108,8 +108,11 @@ VERILOG_FILES += \
 # inferrable RAM models
 VERILOG_FILES += \
         ../../jpeg_encoder/jlib/dp_ram.sv
-
-#        ../../jpeg_encoder/jlib/dp_ram_be.sv
+        
+ifneq ($(SIM),modelsim)
+VERILOG_FILES += \
+        ../../jpeg_encoder/jlib/dp_ram_be.sv
+endif
 endif
 
 ifeq ($(SIM),modelsim)
