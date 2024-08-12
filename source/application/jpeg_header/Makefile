@@ -8,10 +8,11 @@
 
 HEIGHT ?= 200
 WIDTH ?= 200
+QF ?= 50
 
 all: header.bin
 header.bin: jhdr.exe
-	$(<) $(HEIGHT) $(WIDTH)
+	$(<) $(HEIGHT) $(WIDTH) $(QF)
 jhdr.exe: jhdr.c main.c
 	gcc -o $(@) $(^)
 
