@@ -13,6 +13,7 @@ class HuffmanTable:
         self.offsets = []
         self.symbols = []
         self.codes = []
+        self.lengths = []
         self.set = False
         for i, j in zip(['offsets', 'symbols', 'codes', 'set'], table):
             setattr(self, i, j)
@@ -23,12 +24,14 @@ hDCTableY = [
     [ 0, 0, 1, 6, 7, 8, 9, 10, 11, 12, 12, 12, 12, 12, 12, 12, 12 ],
     [ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b ],
     [],
+    [],
     False
 ]
 
 hDCTableCbCr = [
     [ 0, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 12, 12, 12, 12, 12 ],
     [ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b ],
+    [],
     [],
     False
 ]
@@ -59,6 +62,7 @@ hACTableY = [
         0xf9, 0xfa
     ],
     [],
+    [],
     False
 ]
 
@@ -88,6 +92,7 @@ hACTableCbCr = [
         0xf9, 0xfa
     ],
     [],
+    [],
     False
 ]
 
@@ -97,11 +102,14 @@ acTables = [HuffmanTable(table) for table in [hACTableY, hACTableCbCr]]
 # generate all Huffman codes based on symbols from a Huffman table
 def generateCodes(hTable):
     code = 0
+    length = 1
     for i in range(16):
         for j in range(hTable.offsets[i], hTable.offsets[i + 1]):
             hTable.codes.append(code)
+            print(f'{i}, {length}, {code:b}')
             code += 1
         code <<= 1;
+        length += 1;
 
 
 def generateCodes2(tables):
@@ -114,6 +122,7 @@ def generateCodes2(tables):
 generateCodes2(dcTables)
 generateCodes2(acTables)
 
+raise
 
 def make_vlog_old(t, x):
     if x == 'dc':
