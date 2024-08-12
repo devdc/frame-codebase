@@ -4,7 +4,8 @@ rgb_out.bmp
 rgb_out.bmp.npy
 rgb332_out.npy
 orig.bmp
-*vstf
+*.vstf
+vsim.wlf
 
 frame_frame_vo.sdf
 frame_frame_vo.vo
