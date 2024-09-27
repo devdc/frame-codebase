@@ -89,6 +89,7 @@ VERILOG_FILES += \
         ../../jpeg_encoder/jenc/bit_pack.sv \
         ../../jpeg_encoder/jenc/byte_pack.sv \
         ../../jpeg_encoder/jenc/ff00.sv \
+        ../../jpeg_encoder/jlib/psync1.sv \
         ../../jpeg_encoder/jlib/afifo.v
 
 #        ../../jpeg_encoder/jenc/quant_seq_mult_15x13_p4.sv
@@ -199,7 +200,7 @@ ifeq ($(GATE_SIM),1)
 endif    
         EXTRA_ARGS += -L lifcl -L ovi_lifcl -L pmi_work
         EXTRA_ARGS += +memory
-        export COCOTB_RESOLVE_X=ZEROS    
+        export COCOTB_RESOLVE_X=ZEROS
 
 ifeq ($(WAVES),1)
         EXTRA_ARGS += +DUMP

@@ -64,6 +64,23 @@ logic spi_peripheral_clock;
 logic pll_locked;
 logic pll_reset;
 logic jpeg_buffer_clock;
+logic jpeg_slow_clock;
+
+/* JPEG slow clock: 36, 24, 18, 12 MHz:
+
+                |   JPEG_SLOW_CLOCK_SOURCE
+    ------------+--_------------------------------------------------------
+    DIV_PCLKDIV |   camera_pixel_clock (36 MHz)     camera_clock (24 MHz)
+    "X1"        |   36 MHz                          24 MHz
+    "X2"        |   18 MHz                          12 MHz
+
+    NOTE:
+    When divider is "X2", jpeg_buffer_clock can be set to `JPEG_SLOW_CLOCK_SOURCE!
+*/
+
+`define JPEG_SLOW_CLOCK_SOURCE camera_clock         /* 24 MHz -> 12 MHz */
+//`define JPEG_SLOW_CLOCK_SOURCE camera_pixel_clock   /* 36 MHz -> 18 MHz */
+`define JPEG_SLOW_CLOCK_DIV "X2"                    /* "X2" or "X1" */
 
 `ifdef NO_PLL_SIM
 initial osc_clock = 0;
@@ -71,11 +88,19 @@ initial camera_clock = 0;
 initial display_clock = 0;
 initial spi_peripheral_clock = 0;
 initial jpeg_buffer_clock = 0;
+initial jpeg_slow_clock = 0;
 initial forever #(27777.778) osc_clock = ~osc_clock;
 initial forever #(20833.333) camera_clock = !pll_reset ? ~camera_clock : 0;
 initial forever #(13999.889) display_clock = !pll_reset ? ~display_clock : 0;
 initial forever #( 6944.444) spi_peripheral_clock = !pll_reset ? ~spi_peripheral_clock : 0;
 initial forever #( 6410.256) jpeg_buffer_clock = !pll_reset ? ~jpeg_buffer_clock : 0;
+// Divide 36 MHz clock by 2
+generate
+if (`JPEG_SLOW_CLOCK_DIV == "X2")
+always @(posedge `JPEG_SLOW_CLOCK_SOURCE or posedge pll_reset) jpeg_slow_clock = !pll_reset ? ~jpeg_slow_clock : 0;
+else
+always_comb jpeg_slow_clock = `JPEG_SLOW_CLOCK_SOURCE;
+endgenerate
 always_comb pll_locked = ~pll_reset;
 `else
 OSCA #(
@@ -100,6 +125,16 @@ pll_wrapper pll_wrapper (
     .lock_o(pll_locked)
 );
 
+// Divide 36 MHz clock by 2
+PCLKDIVSP #(
+    .DIV_PCLKDIV(`JPEG_SLOW_CLOCK_DIV),
+    .GSR("DISABLED")
+) div (
+    .CLKIN(`JPEG_SLOW_CLOCK_SOURCE),
+    .LSRPDIV(pll_reset),
+    .CLKOUT(jpeg_slow_clock)
+);
+
 `endif //NO_PLL_SIM
 
 // Reset
@@ -108,6 +143,7 @@ logic camera_pixel_reset_n;
 logic display_reset_n;
 logic spi_reset_n;
 logic jpeg_buffer_reset_n;
+logic jpeg_slow_reset_n;
 
 global_reset_sync global_reset_sync (
     .clock_in(osc_clock),
@@ -138,6 +174,12 @@ reset_sync jpeg_buffer_clock_reset_sync (
     .clock_in(jpeg_buffer_clock),
     .async_reset_n_in(global_reset_n),
     .sync_reset_n_out(jpeg_buffer_reset_n)
+);
+
+reset_sync jpeg_slow_clock_reset_sync (
+    .clock_in(jpeg_slow_clock),
+    .async_reset_n_in(global_reset_n),
+    .sync_reset_n_out(jpeg_slow_reset_n)
 );
 
 // SPI
@@ -209,6 +251,9 @@ camera camera (
 
     .jpeg_buffer_clock_in(jpeg_buffer_clock),
     .jpeg_buffer_reset_n_in(jpeg_buffer_reset_n),
+
+    .jpeg_slow_clock_in(jpeg_slow_clock),
+    .jpeg_slow_reset_n_in(jpeg_slow_reset_n),
     
     `ifdef NO_MIPI_IP_SIM
     .byte_to_pixel_frame_valid,
