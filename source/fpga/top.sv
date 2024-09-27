@@ -59,6 +59,23 @@ logic spi_peripheral_clock;
 logic jpeg_buffer_clock;
 logic pll_locked;
 logic pll_reset;
+logic jpeg_slow_clock;
+
+/* JPEG slow clock: 36, 24, 18, 12 MHz:
+
+                |   JPEG_SLOW_CLOCK_SOURCE
+    ------------+--_------------------------------------------------------
+    DIV_PCLKDIV |   camera_pixel_clock (36 MHz)     camera_clock (24 MHz)
+    "X1"        |   36 MHz                          24 MHz
+    "X2"        |   18 MHz                          12 MHz
+
+    NOTE:
+    When divider is "X2", jpeg_buffer_clock can be set to `JPEG_SLOW_CLOCK_SOURCE!
+*/
+
+//`define JPEG_SLOW_CLOCK_SOURCE camera_clock         /* 24 MHz -> 12 MHz */
+`define JPEG_SLOW_CLOCK_SOURCE camera_pixel_clock   /* 36 MHz -> 18 MHz */
+`define JPEG_SLOW_CLOCK_DIV "X2"                    /* "X2" or "X1" */
 
 OSCA #(
     .HF_CLK_DIV("24"),
@@ -80,12 +97,23 @@ pll_wrapper pll_wrapper (
     .lock_o(pll_locked)
 );
 
+// Divide 36 MHz clock by 2
+PCLKDIVSP #(
+    .DIV_PCLKDIV(`JPEG_SLOW_CLOCK_DIV),
+    .GSR("DISABLED")
+) div (
+    .CLKIN(`JPEG_SLOW_CLOCK_SOURCE),
+    .LSRPDIV(pll_reset),
+    .CLKOUT(jpeg_slow_clock)
+);
+
 // Reset
 logic global_reset_n;
 logic camera_pixel_reset_n;
 logic display_reset_n;
 logic spi_peripheral_reset_n;
 logic jpeg_buffer_reset_n;
+logic jpeg_slow_reset_n;
 
 global_reset_sync global_reset_sync (
     .clock_in(osc_clock),
@@ -116,6 +144,12 @@ reset_sync jpeg_buffer_clock_reset_sync (
     .clock_in(jpeg_buffer_clock),
     .async_reset_n_in(global_reset_n),
     .sync_reset_n_out(jpeg_buffer_reset_n)
+);
+
+reset_sync jpeg_slow_clock_reset_sync (
+    .clock_in(jpeg_slow_clock),
+    .async_reset_n_in(global_reset_n),
+    .sync_reset_n_out(jpeg_slow_reset_n)
 );
 
 // SPI
@@ -190,6 +224,9 @@ camera camera (
 
     .jpeg_buffer_clock_in(jpeg_buffer_clock),
     .jpeg_buffer_reset_n_in(jpeg_buffer_reset_n),
+
+    .jpeg_slow_clock_in(jpeg_slow_clock),
+    .jpeg_slow_reset_n_in(jpeg_slow_reset_n),
     
     `ifdef RADIANT
     .mipi_clock_p_in(mipi_clock_p_in),

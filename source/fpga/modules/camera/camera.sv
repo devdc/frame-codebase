@@ -36,6 +36,9 @@ module camera (
     input logic jpeg_buffer_clock_in, // 78MHz
     input logic jpeg_buffer_reset_n_in,
 
+    input logic jpeg_slow_clock_in, // 18MHz or 12 MHz
+    input logic jpeg_slow_reset_n_in,
+
     inout wire mipi_clock_p_in,
     inout wire mipi_clock_n_in,
     inout wire mipi_data_p_in,
@@ -401,6 +404,8 @@ jpeg_encoder jpeg_encoder (
 
     .jpeg_fast_clock_in(jpeg_buffer_clock_in),
     .jpeg_fast_reset_n_in(jpeg_buffer_reset_n_in),
+    .jpeg_slow_clock_in(jpeg_slow_clock_in),
+    .jpeg_slow_reset_n_in(jpeg_slow_reset_n_in),
 
     .red_data_in({gamma_corrected_red_data, 2'b0}),
     .green_data_in({gamma_corrected_green_data, 2'b0}),
