@@ -78,7 +78,7 @@ afifo #(.ASIZE(1)) afifo(
 always_comb yuvrgb_in_hold = full;
 
 always @(posedge slow_clock)
-if (!resetn) begin
+if (!slow_reset_n) begin
     mcu_count <= 0;
     mcu_line_count <= 0;
     block_count <= 0;
@@ -248,7 +248,7 @@ always_comb
         di[i] = mcu_count_0 < 4 ? luma_gray_out_z1? 0 : rd_y[i*8 +: 8] : rd_uv[i*8 +: 8];
 
 always @(posedge slow_clock)
-if (!resetn) 
+if (!slow_reset_n) 
     di_valid <= 0;
 else if (!di_hold)
     di_valid <= !empty;
