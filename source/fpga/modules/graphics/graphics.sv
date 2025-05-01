@@ -15,6 +15,7 @@
 `include "modules/graphics/display_buffers.sv"
 `include "modules/graphics/display_driver.sv"
 `include "modules/graphics/sprite_engine.sv"
+`include "modules/graphics/polygon_engine.sv"
 `endif
 
 module graphics (
@@ -46,6 +47,7 @@ parameter GRAPHICS_ASSIGN_COLOR = 'h11;
 parameter GRAPHICS_DRAW_SPRITE = 'h12;
 parameter GRAPHICS_DRAW_VECTOR = 'h13;
 parameter GRAPHICS_BUFFER_SHOW = 'h14;
+parameter GRAPHICS_DRAW_POLYGON = 'h15;
 parameter GRAPHICS_BUFFER_STATUS = 'h18;
 
 logic [3:0] assign_color_index_spi_domain;
@@ -64,6 +66,18 @@ logic sprite_enable_spi_domain;
 logic sprite_data_valid;
 logic sprite_enable;
 
+// Polygon signals
+logic [9:0] polygon_x_vertex_spi_domain;      // 0 - 639
+logic [9:0] polygon_y_vertex_spi_domain;      // 0 - 399
+logic [9:0] polygon_z_vertex_spi_domain;      // Z-coordinate for 3D rendering
+logic [3:0] polygon_color_index_spi_domain;   // 0 - 15
+logic [7:0] polygon_vertex_count_spi_domain;  // Number of vertices
+logic [9:0] polygon_focal_length_spi_domain;  // Focal length for perspective projection
+logic polygon_data_valid_spi_domain;
+logic polygon_enable_spi_domain;
+logic polygon_data_valid;
+logic polygon_enable;
+
 logic switch_buffer_spi_domain;
 logic switch_buffer;
 logic [1:0] buffer_status;
@@ -76,6 +90,10 @@ always_comb assign_color_enable_spi_domain  = op_code_in == GRAPHICS_ASSIGN_COLO
 always_comb sprite_data_valid_spi_domain    = op_code_in == GRAPHICS_DRAW_SPRITE & operand_valid_in & operand_count_in > 7;
 always_comb sprite_enable_spi_domain        = operand_count_in == 8;
 always_comb sprite_enable                   = sprite_enable_spi_domain;
+// Draw polygon
+always_comb polygon_data_valid_spi_domain   = op_code_in == GRAPHICS_DRAW_POLYGON & operand_valid_in & operand_count_in > 3;
+always_comb polygon_enable_spi_domain       = op_code_in == GRAPHICS_DRAW_POLYGON & operand_valid_in & operand_count_in >= (polygon_vertex_count_spi_domain * 3 + 3);
+always_comb polygon_enable                  = polygon_enable_spi_domain;
 // Switch buffer
 always_comb switch_buffer_spi_domain        = op_code_in == GRAPHICS_BUFFER_SHOW & op_code_valid_in;
 
@@ -109,6 +127,31 @@ always_ff @(negedge spi_clock_in) begin
                 endcase
             end
         end
+        
+        // Draw polygon
+        GRAPHICS_DRAW_POLYGON: begin
+            if (operand_valid_in) begin
+                case (operand_count_in)
+                    0: polygon_vertex_count_spi_domain <= operand_in; // Number of vertices
+                    1: polygon_color_index_spi_domain <= operand_in[3:0]; // Color index
+                    2: polygon_focal_length_spi_domain[9:8] <= operand_in[1:0]; // Focal length upper bits
+                    3: polygon_focal_length_spi_domain[7:0] <= operand_in; // Focal length lower bits
+                    default: begin
+                        // Vertex coordinates are stored in sequence: x1, y1, z1, x2, y2, z2...
+                        if (operand_count_in >= 4) begin
+                            case ((operand_count_in - 4) % 6)
+                                0: polygon_x_vertex_spi_domain[9:8] <= operand_in[1:0]; // X coordinate upper bits
+                                1: polygon_x_vertex_spi_domain[7:0] <= operand_in; // X coordinate lower bits
+                                2: polygon_y_vertex_spi_domain[9:8] <= operand_in[1:0]; // Y coordinate upper bits
+                                3: polygon_y_vertex_spi_domain[7:0] <= operand_in; // Y coordinate lower bits
+                                4: polygon_z_vertex_spi_domain[9:8] <= operand_in[1:0]; // Z coordinate upper bits
+                                5: polygon_z_vertex_spi_domain[7:0] <= operand_in; // Z coordinate lower bits
+                            endcase
+                        end
+                    end
+                endcase
+            end
+        end
     endcase
 end
 
@@ -139,6 +182,15 @@ psync1 psync1_sprite_data_valid (
         .out_reset_n    (display_reset_n_in)
 );
 
+psync1 psync1_polygon_data_valid (
+        .in             (polygon_data_valid_spi_domain),
+        .in_clk         (~spi_clock_in),
+        .in_reset_n     (spi_reset_n_in),
+        .out            (polygon_data_valid),
+        .out_clk        (display_clock_in),
+        .out_reset_n    (display_reset_n_in)
+);
+
 psync1 psync1_switch_buffer (
         .in             (switch_buffer_spi_domain),
         .in_clk         (~spi_clock_in),
@@ -158,6 +210,11 @@ logic pixel_write_enable_vector_to_mux_wire = 0; // TODO wire this up
 logic [17:0] pixel_write_address_vector_to_mux_wire;
 logic [3:0] pixel_write_data_vector_to_mux_wire;
 
+// Polygon engine outputs
+logic pixel_write_enable_polygon_to_mux_wire = 0; // Will be wired up when polygon engine is implemented
+logic [17:0] pixel_write_address_polygon_to_mux_wire;
+logic [3:0] pixel_write_data_polygon_to_mux_wire;
+
 logic pixel_write_enable_mux_to_buffer_wire;
 logic [17:0] pixel_write_address_mux_to_buffer_wire;
 logic [3:0] pixel_write_data_mux_to_buffer_wire;
@@ -173,6 +230,12 @@ always_comb begin
         pixel_write_enable_mux_to_buffer_wire = 1'b1;
         pixel_write_address_mux_to_buffer_wire = pixel_write_address_vector_to_mux_wire;
         pixel_write_data_mux_to_buffer_wire = pixel_write_data_vector_to_mux_wire;
+    end
+    
+    else if (pixel_write_enable_polygon_to_mux_wire) begin
+        pixel_write_enable_mux_to_buffer_wire = 1'b1;
+        pixel_write_address_mux_to_buffer_wire = pixel_write_address_polygon_to_mux_wire;
+        pixel_write_data_mux_to_buffer_wire = pixel_write_data_polygon_to_mux_wire;
     end
 
     else begin
@@ -199,6 +262,26 @@ sprite_engine sprite_engine (
     .pixel_write_enable_out(pixel_write_enable_sprite_to_mux_wire),
     .pixel_write_address_out(pixel_write_address_sprite_to_mux_wire),
     .pixel_write_data_out(pixel_write_data_sprite_to_mux_wire)
+);
+
+// Polygon engine for 3D polygon rendering
+polygon_engine polygon_engine (
+    .clock_in(display_clock_in),
+    .reset_n_in(display_reset_n_in),
+    .enable_in(polygon_enable),
+
+    .vertex_count_in(polygon_vertex_count_spi_domain),
+    .color_index_in(polygon_color_index_spi_domain),
+    .focal_length_in(polygon_focal_length_spi_domain),
+    
+    .x_vertex_in(polygon_x_vertex_spi_domain),
+    .y_vertex_in(polygon_y_vertex_spi_domain),
+    .z_vertex_in(polygon_z_vertex_spi_domain),
+    .data_valid_in(polygon_data_valid),
+    
+    .pixel_write_enable_out(pixel_write_enable_polygon_to_mux_wire),
+    .pixel_write_address_out(pixel_write_address_polygon_to_mux_wire),
+    .pixel_write_data_out(pixel_write_data_polygon_to_mux_wire)
 );
 
 // Vector engine
